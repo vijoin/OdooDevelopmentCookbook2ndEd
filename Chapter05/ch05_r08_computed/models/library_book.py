@@ -21,21 +21,20 @@ class LibraryBook(models.Model):
 
     @api.depends('date_release')
     def _compute_age(self):
-        today = fDate.from_string(fDate.context_today(self))
+        today = fDate.context_today(self)
         for book in self.filtered('date_release'):
-            delta = (today - fDate.from_string(book.date_release))
+            delta = today - book.date_release
             book.age_days = delta.days
 
     def _inverse_age(self):
-        today = fDate.from_string(fDate.context_today(self))
+        today = fDate.context_today(self)
         for book in self.filtered('date_release'):
-            d = today - timedelta(days=book.age_days)
-            book.date_release = fDate.to_string(d)
+            d = fDate.subtract(today, days=book.age_days)
+            book.date_release = d
 
     def _search_age(self, operator, value):
-        today = fDate.from_string(fDate.context_today(self))
-        value_days = timedelta(days=value)
-        value_date = fDate.to_string(today - value_days)
+        today = fDate.context_today(self)
+        value_date = fDate.subtract(today, days=value)
         # convert the operator:
         # book with age > value have a date < value_date
         operator_map = {
